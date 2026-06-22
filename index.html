@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spreadsheet to Web App Generator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="indigo">
+  <div class="generator-app">
+    <!-- Configuration Panel (Left) -->
+    <aside class="config-sidebar">
+      <div class="brand-section">
+        <div class="brand-logo">⚡</div>
+        <div class="brand-title">
+          <h1>Sheet2Web</h1>
+          <span>Spreadsheet App Generator</span>
+        </div>
+      </div>
+
+      <!-- Section: Setup URL -->
+      <div class="config-group">
+        <span class="config-section-title">1. Sumber Data (Google Sheets)</span>
+        <div class="config-card">
+          <div class="form-field">
+            <label for="input-api-url">Apps Script Web App URL</label>
+            <input type="text" id="input-api-url" placeholder="https://script.google.com/macros/s/.../exec">
+          </div>
+          <div class="form-field">
+            <label for="input-ss-url">Google Spreadsheet URL</label>
+            <input type="text" id="input-ss-url" placeholder="https://docs.google.com/spreadsheets/d/.../edit">
+          </div>
+          <button class="btn btn-primary btn-block" onclick="analyzeSpreadsheet()">
+            🔍 Analisis Spreadsheet
+          </button>
+        </div>
+      </div>
+
+      <!-- Section: Customization -->
+      <div class="config-group">
+        <span class="config-section-title">2. Kustomisasi Tampilan</span>
+        <div class="config-card">
+          <div class="form-field">
+            <label for="input-app-name">Nama Aplikasi Web</label>
+            <input type="text" id="input-app-name" value="Sedekah Dashboard" placeholder="Nama Aplikasi Anda">
+          </div>
+          <div class="form-field">
+            <label>Tema Warna Utama</label>
+            <div class="theme-grid">
+              <div class="theme-chip theme-chip-indigo active" data-theme="indigo" title="Indigo Night"></div>
+              <div class="theme-chip theme-chip-emerald" data-theme="emerald" title="Emerald Oasis"></div>
+              <div class="theme-chip theme-chip-ocean" data-theme="ocean" title="Deep Ocean"></div>
+              <div class="theme-chip theme-chip-purple" data-theme="purple" title="Royal Purple"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Dynamic Sheet Configs -->
+      <div class="config-group">
+        <span class="config-section-title">3. Pengaturan Konten & Grafik</span>
+        <div class="config-card" id="sheets-config-container">
+          <!-- Dinamis dari app.js -->
+          <p style="font-size:0.85rem; color:var(--text-muted); text-align:center;">
+            Analisis spreadsheet untuk memuat konfigurasi per-sheet.
+          </p>
+        </div>
+      </div>
+
+      <!-- Section: Deploy Instructions -->
+      <div class="config-group" style="margin-top:auto;">
+        <div class="config-card" style="background: rgba(255,255,255,0.01); border-style: dashed;">
+          <h4 style="font-size:0.85rem; font-weight:600; margin-bottom:6px;">🚀 Panduan Deploy Vercel:</h4>
+          <ol style="font-size:0.75rem; color:var(--text-muted); padding-left:14px; display:flex; flex-direction:column; gap:4px;">
+            <li>Unduh file <code style="color:var(--primary)">index.html</code> yang dihasilkan.</li>
+            <li>Buat repository baru di GitHub dan upload file tersebut.</li>
+            <li>Hubungkan Vercel ke repository Anda, pilih deploy. Selesai!</li>
+          </ol>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Preview Area (Right) -->
+    <main class="main-viewport">
+      <div class="viewport-header">
+        <div class="viewport-tabs">
+          <button class="viewport-tab active" onclick="switchViewportTab('preview')">👁️ Live Preview</button>
+          <button class="viewport-tab" onclick="switchViewportTab('code')">💻 Kode Sumber (index.html)</button>
+          <button class="viewport-tab" onclick="switchViewportTab('apps-script')">⚙️ Google Apps Script</button>
+        </div>
+        
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-secondary" onclick="copyToClipboard()">📋 Salin Kode</button>
+          <button class="btn btn-primary" onclick="downloadGeneratedApp()">📥 Unduh index.html</button>
+        </div>
+      </div>
+
+      <!-- Preview IFrame Window -->
+      <div id="viewport-preview" class="preview-window">
+        <div class="preview-bar">
+          <div class="preview-dot dot-red"></div>
+          <div class="preview-dot dot-yellow"></div>
+          <div class="preview-dot dot-green"></div>
+          <div class="preview-address-bar">https://app.vercel.app/</div>
+        </div>
+        <div class="preview-body-container">
+          <iframe id="preview-iframe" class="preview-iframe"></iframe>
+        </div>
+      </div>
+
+      <!-- Code Window (Hidden by default) -->
+      <div id="viewport-code" style="display:none; flex: 1;">
+        <div class="code-container" style="height:100%; max-height:none;">
+          <pre><code>Loading code...</code></pre>
+        </div>
+      </div>
+
+      <!-- Apps Script Template Window (Hidden by default) -->
+      <div id="viewport-apps-script" style="display:none; flex: 1; flex-direction:column; gap:12px;">
+        <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); padding:16px; border-radius:12px; font-size:0.9rem;">
+          <h3>Salin Kode Apps Script di Bawah Ini:</h3>
+          <p style="color:var(--text-muted); font-size:0.8rem; margin-top:4px;">
+            Ikuti instruksi di bagian atas komentar kode untuk memasangnya pada Spreadsheet Anda.
+          </p>
+        </div>
+        <div class="code-container" style="flex: 1; max-height:none;">
+          <pre><code id="apps-script-code-box">Memuat script...</code></pre>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="app.js"></script>
+  <script>
+    // Tab controller
+    function switchViewportTab(tabName) {
+      document.querySelectorAll('.viewport-tab').forEach(tab => {
+        const text = tab.innerText.toLowerCase();
+        tab.classList.toggle('active', text.includes(tabName));
+      });
+
+      document.getElementById('viewport-preview').style.display = tabName === 'preview' ? 'flex' : 'none';
+      document.getElementById('viewport-code').style.display = tabName === 'code' ? 'block' : 'none';
+      document.getElementById('viewport-apps-script').style.display = tabName === 'apps-script' ? 'flex' : 'none';
+
+      if (tabName === 'apps-script') {
+        loadAppsScriptTemplate();
+      }
+    }
+
+    async function loadAppsScriptTemplate() {
+      try {
+        const response = await fetch('apps-script-template.js');
+        const text = await response.text();
+        document.getElementById('apps-script-code-box').innerText = text;
+      } catch (err) {
+        document.getElementById('apps-script-code-box').innerText = 'Gagal memuat template: ' + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
