@@ -178,17 +178,48 @@ function doPost(e) {
   }
 }
 
-// Mencari lokasi kolom header ID
+// Mencari lokasi kolom header ID atau baris header tabel
 function findHeaderLocation(data) {
-  for (var i = 0; i < Math.min(data.length, 10); i++) { // Cek 10 baris pertama
+  // 1. Coba cari baris yang punya kolom kata kunci ID
+  for (var i = 0; i < Math.min(data.length, 15); i++) {
     for (var j = 0; j < data[i].length; j++) {
       var val = String(data[i][j]).toLowerCase().trim();
-      // Mendeteksi kolom kunci primer/ID
       if (val === 'id' || val.indexOf('id_') === 0 || val.indexOf('id ') === 0 || val.indexOf('kode') === 0) {
         return { row: i, col: j };
       }
     }
   }
+
+  // 2. Jika tidak ada kolom ID, cari baris pertama yang memiliki jumlah kolom terisi signifikan
+  var maxFilled = 0;
+  var rowCounts = [];
+  for (var i = 0; i < Math.min(data.length, 15); i++) {
+    var filled = 0;
+    for (var j = 0; j < data[i].length; j++) {
+      if (data[i][j] !== undefined && data[i][j] !== null && String(data[i][j]).trim() !== "") {
+        filled++;
+      }
+    }
+    rowCounts.push(filled);
+    if (filled > maxFilled) {
+      maxFilled = filled;
+    }
+  }
+
+  // Cari baris pertama yang jumlah terisinya >= 70% dari maxFilled dan minimal ada 2 kolom terisi
+  if (maxFilled >= 2) {
+    for (var i = 0; i < rowCounts.length; i++) {
+      if (rowCounts[i] >= Math.max(2, maxFilled * 0.7)) {
+        // Cari kolom pertama yang tidak kosong di baris ini sebagai kolom ID/Kunci
+        for (var j = 0; j < data[i].length; j++) {
+          if (data[i][j] !== undefined && data[i][j] !== null && String(data[i][j]).trim() !== "") {
+            return { row: i, col: j };
+          }
+        }
+      }
+    }
+  }
+
   return null;
 }
 
@@ -206,8 +237,5 @@ function findLastDataRow(data, headerIdx, idColIdx) {
 
 function createJsonResponse(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON)
-    .setHeader("Access-Control-Allow-Origin", "*")
-    .setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-    .setHeader("Access-Control-Allow-Headers", "Content-Type");
+    .setMimeType(ContentService.MimeType.JSON);
 }
